@@ -1,0 +1,231 @@
+import { useEffect, useRef } from "react"
+import * as THREE from "three"
+import gsap from "gsap"
+import { ScrollTrigger } from "gsap/ScrollTrigger"
+import Lenis from "@studio-freight/lenis"
+import * as Tone from "tone"
+
+import "./App.css"
+
+gsap.registerPlugin(ScrollTrigger)
+
+export default function App() {
+
+const canvasRef = useRef(null)
+const visualizerRef = useRef(null)
+
+useEffect(()=>{
+
+/* Smooth scroll */
+
+const lenis = new Lenis()
+
+function raf(time){
+lenis.raf(time)
+requestAnimationFrame(raf)
+}
+
+requestAnimationFrame(raf)
+
+/* GSAP animation */
+
+gsap.from(".hero h1",{opacity:0,y:80,duration:1.2})
+gsap.from(".hero p",{opacity:0,y:40,delay:.4})
+
+/* THREE.JS */
+
+const scene = new THREE.Scene()
+
+const camera = new THREE.PerspectiveCamera(
+75,
+window.innerWidth/window.innerHeight,
+0.1,
+1000
+)
+
+const renderer = new THREE.WebGLRenderer({
+canvas: canvasRef.current
+})
+
+renderer.setSize(window.innerWidth,window.innerHeight)
+
+camera.position.z = 30
+
+const geometry = new THREE.IcosahedronGeometry(10,1)
+
+const material = new THREE.MeshStandardMaterial({
+color:0xff00cc,
+wireframe:true
+})
+
+const mesh = new THREE.Mesh(geometry,material)
+
+scene.add(mesh)
+
+const light = new THREE.PointLight(0xffffff)
+
+light.position.set(10,10,10)
+
+scene.add(light)
+
+function animate(){
+
+requestAnimationFrame(animate)
+
+mesh.rotation.x += 0.01
+mesh.rotation.y += 0.01
+
+renderer.render(scene,camera)
+
+}
+
+animate()
+
+/* Visualizer bars */
+
+for(let i=0;i<60;i++){
+
+const bar = document.createElement("div")
+
+bar.classList.add("bar")
+
+bar.style.height = Math.random()*150+"px"
+
+visualizerRef.current.appendChild(bar)
+
+}
+
+},[])
+
+/* Beat generator */
+
+const playBeat = ()=>{
+
+const synth = new Tone.MembraneSynth().toDestination()
+
+Tone.Transport.scheduleRepeat(time=>{
+synth.triggerAttackRelease("C2","8n",time)
+},"4n")
+
+Tone.Transport.start()
+
+}
+
+return (
+
+<div>
+
+<canvas id="bg" ref={canvasRef}></canvas>
+
+<nav>
+
+<div className="logo">UNLEGEND</div>
+
+<div className="links">
+<a href="#studio">Studio</a>
+<a href="#sound">Sound Lab</a>
+<a href="#experience">Experience</a>
+<a href="#book">Book</a>
+</div>
+
+</nav>
+
+<section className="hero">
+
+<h1>Create <span>Legendary Sound</span></h1>
+
+<p>Next-Generation Recording Studio in Indore</p>
+
+<button onClick={playBeat}>Generate Beat</button>
+
+</section>
+
+
+<section id="studio" className="panel">
+
+<h2>Studio Precision</h2>
+
+<p>
+Professional recording, mixing, mastering and music production.
+</p>
+
+<div className="services">
+
+<div className="card">
+<h3>Recording</h3>
+<p>High-end microphones and acoustic treatment.</p>
+</div>
+
+<div className="card">
+<h3>Mix & Master</h3>
+<p>Industry grade sound engineering.</p>
+</div>
+
+<div className="card">
+<h3>Podcast Studio</h3>
+<p>Perfect setup for podcasts and voiceovers.</p>
+</div>
+
+<div className="card">
+<h3>Music Production</h3>
+<p>From beats to final track production.</p>
+</div>
+
+</div>
+
+</section>
+
+
+<section id="sound" className="panel">
+
+<h2>Interactive Sound Visualizer</h2>
+
+<div className="visualizer" ref={visualizerRef}></div>
+
+</section>
+
+
+<section id="experience" className="panel">
+
+<h2>Live Mixer</h2>
+
+<div className="mixer">
+
+<input type="range" min="0" max="1" step="0.01"/>
+<input type="range" min="0" max="1" step="0.01"/>
+<input type="range" min="0" max="1" step="0.01"/>
+
+</div>
+
+</section>
+
+
+<section id="book" className="panel booking">
+
+<h2>Book Studio Session</h2>
+
+<form>
+
+<input type="text" placeholder="Name"/>
+
+<input type="email" placeholder="Email"/>
+
+<input type="date"/>
+
+<button>Reserve Session</button>
+
+</form>
+
+</section>
+
+<footer>
+
+<p>© 2026 Unlegend Studio • Indore</p>
+
+</footer>
+
+</div>
+
+)
+
+}
